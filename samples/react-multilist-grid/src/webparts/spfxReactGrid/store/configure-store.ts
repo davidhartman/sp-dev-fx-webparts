@@ -5,12 +5,10 @@ import {
   Middleware
 } from "redux";
 import { fromJS } from "immutable";
-import { createMemoryHistory } from "react-router";
-import { routerMiddleware } from "react-router-redux";
 import thunk from "redux-thunk";
-
+import {Store} from "redux";
 import promiseMiddleware from "redux-promise-middleware";
-import logger from "./logger";
+
 import { RootReducer } from "../reducers/rootReducer";
 const __DEV__: boolean = true; // from webpack
 function configureStore(initialState) {
@@ -28,14 +26,13 @@ function configureStore(initialState) {
 }
 
 function _getMiddleware(): Middleware[] {
-  const history = createMemoryHistory();
+
   let middleware = [
-    routerMiddleware(history),
     promiseMiddleware(),
     thunk,
   ];
   if (__DEV__) {
-    middleware = [...middleware, logger];
+    middleware = [...middleware];
   }
   return middleware;
 }

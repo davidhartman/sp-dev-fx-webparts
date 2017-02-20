@@ -1,11 +1,14 @@
 ﻿import * as React from "react";
 import { SharePointLookupCellFormatter } from "../components/SharePointFormatters";
-const connect = require("react-redux").connect;
-import { addColumn, removeColumn,  removeAllColumns, moveCulumnUp, moveCulumnDown } from "../actions/columnActions";
+//const connect = require("react-redux").connect;
+import { connect } from "react-redux";
+import * as _ from "lodash";
+import { addColumn, removeColumn, removeAllColumns, moveCulumnUp, moveCulumnDown } from "../actions/columnActions";
 import ColumnDefinition from "../model/ColumnDefinition";
-import { Button, ButtonType, TextField, CommandBar, Dropdown, IDropdownOption, Toggle } from "office-ui-fabric-react";
+import { SortDirection } from "../model/ColumnDefinition";
+import { Button, ButtonType, TextField, CommandBar, Dropdown, IDropdownOption, Toggle, Slider } from "office-ui-fabric-react";
 import Container from "../components/container";
-import { Guid, Log } from "@microsoft/sp-client-base";
+import { Guid, Log } from "@microsoft/sp-core-library";
 /** NOTE:
  * To enable other column types
  * 1. Uncomment it here
@@ -15,7 +18,7 @@ import { Guid, Log } from "@microsoft/sp-client-base";
  * 4. If any other data is needed to render the contents in an editable mode (maybe Managed Metadata) Add a case in the Containers\ListItemContaine\toggleEditing
  *      method to get the data. Also will need to add another enitity to the store (actions, reducers, etc.)
  * 5. Special logic may be needed when moving an item between lists (as in the cas of Users ). Add this to Containers\ListItemContaine\mapOldListFieldsToNewListFields
- * 
+ *
  */
 const fieldTypes: Array<IDropdownOption> = [
     { key: null, text: "(Selecte one)" },
@@ -27,6 +30,7 @@ const fieldTypes: Array<IDropdownOption> = [
     // { key: "Counter", text: "Counter" },
     { key: "Choice", text: "Choice" },
     { key: "Lookup", text: "Lookup" },
+    { key: "Counter", text: "Coumter (Item ID)" },
     // { key: "Boolean", value: "Boolean" },
     { key: "Number", text: "Number" },
     // { key: "Currency", value: "Currency" },
@@ -46,6 +50,13 @@ const fieldTypes: Array<IDropdownOption> = [
     // { name: "WorkflowEventType", value: "WorkflowEventType" },
 
 ];
+const sortDirectionOptions: Array<IDropdownOption> = [
+
+    { key: SortDirection.None, text: SortDirection[SortDirection.None] },
+    { key: SortDirection.Ascending, text: SortDirection[SortDirection.Ascending] },
+    { key: SortDirection.Descending, text: SortDirection[SortDirection.Descending] },
+
+];
 export interface IColumnsPageProps extends React.Props<any> {
     columns: Array<ColumnDefinition>;
     addColumn: () => void;
@@ -57,7 +68,7 @@ export interface IColumnsPageProps extends React.Props<any> {
     save: () => void;
 }
 interface IContextMenu extends React.Props<any> {
-    onRowDelete: AdazzleReactDataGrid.ColumnEventCallback;
+    //   onRowDelete: AdazzleReactDataGrid.ColumnEventCallback;
 }
 function mapStateToProps(state) {
     return {
@@ -68,7 +79,7 @@ function mapDispatchToProps(dispatch) {
     return {
         addColumn: (): void => {
             const id = Guid.newGuid();
-            const col: ColumnDefinition = new ColumnDefinition(id.toString(), "", 80, true);
+            const col: ColumnDefinition = new ColumnDefinition(id.toString(), "", 80, true, );
             dispatch(addColumn(col));
         },
 
@@ -149,6 +160,24 @@ export class ColumnDefinitionContainerNative extends React.Component<IColumnsPag
         editor: "BooleanEditor",
         formatter: "BooleanFormatter",
         width: 99
+    },
+    {
+        id: "sortSequence",
+        name: "sortSequence",
+        editable: true,
+        width: 99,
+        editor: "SortSequenceEditor",
+
+
+    },
+    {
+        id: "sortDirection",
+        name: "sortDirection",
+        editable: true,
+        width: 99,
+        editor: "SortDirectionEditor",
+        formatter: "SortDirectionFormatter",
+
     }];
 
     private handleCellUpdatedEvent(event) { //native react uses a Synthetic event
@@ -156,8 +185,8 @@ export class ColumnDefinitionContainerNative extends React.Component<IColumnsPag
     }
     private handleCellUpdated(value) { // Office UI Fabric does not use events. It just calls this method with the new value
         let {entityid, columnid} = this.state.editing;
-        const entity: ColumnDefinition = this.props.columns.find((temp) => temp.guid === entityid);
-        const column = this.gridColulumns.find(temp => temp.id === columnid);
+        const entity: ColumnDefinition = _.find(this.props.columns, (temp) => temp.guid === entityid);
+        const column = _.find(this.gridColulumns, (temp) => temp.id === columnid);
         entity[column.name] = value;
         //  this.props.saveColumn(entity);
 
@@ -169,7 +198,7 @@ export class ColumnDefinitionContainerNative extends React.Component<IColumnsPag
         const target = this.getParent(event.target, "TD");
         const attributes: NamedNodeMap = target.attributes;
         const entityId = attributes.getNamedItem("data-entityid").value;
-        const column: ColumnDefinition = this.props.columns.find(cd => cd.guid === entityId);
+        const column: ColumnDefinition = _.find(this.props.columns, cd => cd.guid === entityId);
         this.props.moveColumnUp(column);
         return;
     }
@@ -179,7 +208,7 @@ export class ColumnDefinitionContainerNative extends React.Component<IColumnsPag
         const target = this.getParent(event.target, "TD");
         const attributes: NamedNodeMap = target.attributes;
         const entityId = attributes.getNamedItem("data-entityid").value;
-        const column: ColumnDefinition = this.props.columns.find(cd => cd.guid === entityId);
+        const column: ColumnDefinition = _.find(this.props.columns, cd => cd.guid === entityId);
         this.props.moveColumnDown(column);
         return;
     }
@@ -189,7 +218,7 @@ export class ColumnDefinitionContainerNative extends React.Component<IColumnsPag
         const target = this.getParent(event.target, "TD");
         const attributes: NamedNodeMap = target.attributes;
         const entityId = attributes.getNamedItem("data-entityid").value;
-        const column: ColumnDefinition = this.props.columns.find(cd => cd.guid === entityId);
+        const column: ColumnDefinition = _.find(this.props.columns, cd => cd.guid === entityId);
         this.props.removeColumn(column);
         return;
     }
@@ -207,7 +236,7 @@ export class ColumnDefinitionContainerNative extends React.Component<IColumnsPag
         const columnid = attributes.getNamedItem("data-columnid").value;
         this.setState({ "editing": { entityid: entityid, columnid: columnid } });
     }
-    public CellContentsEditable(props: { entity: ColumnDefinition, gridColumn: GridColumn, cellUpdated: (newValue) => void, cellUpdatedEvent: (event: React.SyntheticEvent) => void; }): JSX.Element {
+    public CellContentsEditable(props: { entity: ColumnDefinition, gridColumn: GridColumn, cellUpdated: (newValue) => void, cellUpdatedEvent: (event: React.SyntheticEvent<any>) => void; }): JSX.Element {
         const {entity, gridColumn, cellUpdated, cellUpdatedEvent} = props;
         if (!gridColumn.editable) {
             return (<span>
@@ -225,12 +254,30 @@ export class ColumnDefinitionContainerNative extends React.Component<IColumnsPag
                     <Dropdown label="" selectedKey={entity[gridColumn.name]} options={fieldTypes} onChanged={(selection: IDropdownOption) => cellUpdated(selection.key)} >
                     </Dropdown >
                 );
+            case "SortSequenceEditor":
+                return (
+                    <Slider
+                        onChange={selection => cellUpdated(selection)}
+                        min={1}
+                        max={10}
+                        value={entity[gridColumn.name]}
+                    >
+                    </Slider >
+                );
+            case "SortDirectionEditor":
+                return (
+                    <Dropdown label="" selectedKey={entity[gridColumn.name]}
+                        options={sortDirectionOptions}
+                        onChanged={(selection: IDropdownOption) => cellUpdated(selection.key)}
+                    >
+                    </Dropdown >
+                );
             default:
                 return (
                     <TextField autoFocus width={gridColumn.width}
                         value={entity[gridColumn.name]}
                         onChanged={cellUpdated} // this does not use eventing. It just calls the method. onChanged NOT onChange
-                        />);
+                    />);
         }
     }
     public CellContents(props: { entity: ColumnDefinition, gridColumn: GridColumn }): JSX.Element {
@@ -251,6 +298,13 @@ export class ColumnDefinitionContainerNative extends React.Component<IColumnsPag
                 //     );
                 let result = (entity[gridColumn.name]) ? (<div>Yes</div>) : (<div>No</div>);
                 return result;
+            case "SortDirectionFormatter":
+                return (
+                    <a href="#" onFocus={this.toggleEditing} style={{ textDecoration: "none" }}>
+                        {SortDirection[entity[gridColumn.name]]}
+                    </a>
+                );
+
             case "SharePointLookupCellFormatter":
                 return (<SharePointLookupCellFormatter value={entity[gridColumn.name]} onFocus={this.toggleEditing} />);
             default:
@@ -274,7 +328,7 @@ export class ColumnDefinitionContainerNative extends React.Component<IColumnsPag
             );
         }
     }
-    public TableRow(props: { isFirst: boolean, isLast: boolean, entity: ColumnDefinition, columns: Array<GridColumn>, cellUpdated: (newValue) => void, cellUpdatedEvent: (event: React.SyntheticEvent) => void; }): JSX.Element {
+    public TableRow(props: { isFirst: boolean, isLast: boolean, entity: ColumnDefinition, columns: Array<GridColumn>, cellUpdated: (newValue) => void, cellUpdatedEvent: (event: React.SyntheticEvent<any>) => void; }): JSX.Element {
         const {entity, columns, cellUpdated, cellUpdatedEvent, isLast, isFirst} = props;
         return (
             <tr>
@@ -303,7 +357,7 @@ export class ColumnDefinitionContainerNative extends React.Component<IColumnsPag
                 </td>
             </tr>);
     };
-    public TableRows(props: { entities: Array<ColumnDefinition>, columns: Array<GridColumn>, cellUpdated: (newValue) => void, cellUpdatedEvent: (event: React.SyntheticEvent) => void; }): JSX.Element {
+    public TableRows(props: { entities: Array<ColumnDefinition>, columns: Array<GridColumn>, cellUpdated: (newValue) => void, cellUpdatedEvent: (event: React.SyntheticEvent<any>) => void; }): JSX.Element {
         const {entities, columns, cellUpdated, cellUpdatedEvent} = props;
         return (
             <tbody>

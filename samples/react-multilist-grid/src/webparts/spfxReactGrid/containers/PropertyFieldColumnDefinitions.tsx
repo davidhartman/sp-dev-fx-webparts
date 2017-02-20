@@ -3,7 +3,6 @@ import * as React from 'react';
 import * as ReactDom from 'react-dom';
 import {
   IPropertyPaneField,
-  IPropertyPaneFieldType,
   IPropertyPaneCustomFieldProps
 } from '@microsoft/sp-webpart-base';
 import PropertyFieldColumnDefinitionsHost, { IPropertyFieldColumnDefinitionsHostProps } from './PropertyFieldColumnDefinitionsHost';
@@ -12,11 +11,11 @@ export interface IPropertyFieldColumnDefinitionsProps {
   label: string;
   initialValue?: Array<ColumnDefinition>;
   onPropertyChange(propertyPath: string, oldValue: any, newValue: any): void;
-    getColumnDefinitions: () =>Array<ColumnDefinition>;
+  getColumnDefinitions: () => Array<ColumnDefinition>;
 }
 export interface IPropertyFieldColumnDefinitionsPropsInternal extends IPropertyPaneCustomFieldProps {
   label: string;
-  initialValue?:  Array<ColumnDefinition>;
+  initialValue?: Array<ColumnDefinition>;
   targetProperty: string;
   onRender(elem: HTMLElement): void;
   onDispose(elem: HTMLElement): void;
@@ -25,15 +24,16 @@ export interface IPropertyFieldColumnDefinitionsPropsInternal extends IPropertyP
 }
 class PropertyFieldColumnDefinitionsBuilder implements IPropertyPaneField<IPropertyFieldColumnDefinitionsPropsInternal> {
   //Properties defined by IPropertyPaneField
-  public type: IPropertyPaneFieldType = 1;//IPropertyPaneFieldType.Custom;
+  public type = 1;//IPropertyPaneFieldType.Custom;
   public targetProperty: string;
   public properties: IPropertyFieldColumnDefinitionsPropsInternal;
   //Custom properties
   private label: string;
+
   private onPropertyChange: (propertyPath: string, oldValue: any, newValue: any) => void;
   private customProperties: any;
   public constructor(_targetProperty: string, _properties: IPropertyFieldColumnDefinitionsPropsInternal) {
-     this.render = this.render.bind(this);
+    this.render = this.render.bind(this);
     this.properties = _properties;
     this.label = _properties.label;
     this.properties.onDispose = this.dispose;
@@ -44,8 +44,8 @@ class PropertyFieldColumnDefinitionsBuilder implements IPropertyPaneField<IPrope
   private render(elem: HTMLElement): void {
     const element: React.ReactElement<IPropertyFieldColumnDefinitionsHostProps> = React.createElement(PropertyFieldColumnDefinitionsHost, {
       label: this.label,
-     onPropertyChange: this.onPropertyChange,
-     columnDefinitions: this.customProperties,
+      onPropertyChange: this.onPropertyChange,
+      columnDefinitions: this.customProperties,
 
     });
     ReactDom.render(element, elem);
@@ -55,10 +55,12 @@ class PropertyFieldColumnDefinitionsBuilder implements IPropertyPaneField<IPrope
 }
 export function PropertyFieldColumnDefinitions(targetProperty: string, properties: IPropertyFieldColumnDefinitionsProps): IPropertyPaneField<IPropertyFieldColumnDefinitionsPropsInternal> {
 
+
     //Create an internal properties object from the given properties
     var newProperties: IPropertyFieldColumnDefinitionsPropsInternal = {
       label: properties.label,
       targetProperty: targetProperty,
+        key: targetProperty,
       initialValue: properties.initialValue,
       onPropertyChange: properties.onPropertyChange,
       columnDefinitions: properties.getColumnDefinitions(),
@@ -68,6 +70,7 @@ export function PropertyFieldColumnDefinitions(targetProperty: string, propertie
     //Calles the PropertyFieldColumnDefinitions builder object
     //This object will simulate a PropertyFieldCustom to manage his rendering process
     return new PropertyFieldColumnDefinitionsBuilder(targetProperty, newProperties);
+
 }
 
 
