@@ -7,8 +7,8 @@
     }
   ],
   "externals": {
-    "jquery":"node_modules/jquery/dist/jquery.min.js",
-    "jqueryui":"node_modules/jqueryui/jquery-ui.min.js"
+    "jquery": "node_modules/jquery/dist/jquery.min.js",
+    "jqueryui": "node_modules/jqueryui/jquery-ui.min.js"
   },
   "localizedResources": {
     "jQueryStrings": "webparts/jQuery/loc/{locale}.js"

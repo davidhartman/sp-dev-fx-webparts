@@ -1,3 +1,3 @@
 {
-  "cdnBasePath": "<!-- PATH TO CDN -->"
+  "cdnBasePath": "https://yourCDNUrl.azureedge.net/helloworld-webpart/"
 }

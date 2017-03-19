@@ -7,7 +7,6 @@ import {
   PropertyPaneDropdown,
   PropertyPaneToggle
 } from '@microsoft/sp-webpart-base';
-
 import { escape } from '@microsoft/sp-lodash-subset';
 
 import styles from './HelloWorld.module.scss';
@@ -15,7 +14,8 @@ import * as strings from 'helloWorldStrings';
 import { IHelloWorldWebPartProps } from './IHelloWorldWebPartProps';
 import MockHttpClient from './MockHttpClient';
 import {
-  SPHttpClient
+  SPHttpClient,
+  SPHttpClientResponse   
 } from '@microsoft/sp-http';
 import {
   Environment,
@@ -35,35 +35,28 @@ export default class HelloWorldWebPart extends BaseClientSideWebPart<IHelloWorld
 
   public render(): void {
     this.domElement.innerHTML = `
-        <div class="${styles.row}">
-          <div class="${styles.column}">
-            <span class="${styles.title}">
-              Welcome to SharePoint!
-            </span>
-            <p class="${styles.subtitle}">
-              Customize SharePoint experiences using Web Parts.
-            </p>
-            <p class="${styles.description}">
-              ${escape(this.properties.description)}
-            </p>
-            <p class="${styles.description}">
-              ${escape(this.properties.test2)}
-            </p>
-            <p class="ms-font-l ms-fontColor-white">Loading from ${this.context.pageContext.web.title}</p>
-            <a class="ms-Button ${styles.button}" href="https://github.com/SharePoint/sp-dev-docs/wiki">
-              <span class="ms-Button-label">
-                Learn more
-              </span>
-            </a>
-          </div>        
-        </div>
-        <div id="spListContainer" />`;
+      <div class="${styles.helloWorld}">
+        <div class="${styles.container}">
+          <div class="ms-Grid-row ms-bgColor-themeDark ms-fontColor-white ${styles.row}">
+            <div class="ms-Grid-col ms-u-lg10 ms-u-xl8 ms-u-xlPush2 ms-u-lgPush1">
+              <span class="ms-font-xl ms-fontColor-white">Welcome to SharePoint!</span>
+              <p class="ms-font-l ms-fontColor-white">Customize SharePoint experiences using Web Parts.</p>
+              <p class="ms-font-l ms-fontColor-white">${escape(this.properties.description)}</p>
+              <p class="ms-font-l ms-fontColor-white">Loading from ${escape(this.context.pageContext.web.title)}</p>
+              <a href="https://aka.ms/spfx" class="${styles.button}">
+                <span class="${styles.label}">Learn more</span>
+              </a>
+            </div>
+          </div>
+        </div>  
+        <div id="spListContainer" />
+      </div>`;
 
     this._renderListAsync();
   }
 
   private _getMockListData(): Promise<ISPLists> {
-    return MockHttpClient.get(this.context.pageContext.web.absoluteUrl)
+    return MockHttpClient.get()
       .then((data: ISPList[]) => {
         var listData: ISPLists = { value: data };
         return listData;
@@ -72,7 +65,7 @@ export default class HelloWorldWebPart extends BaseClientSideWebPart<IHelloWorld
 
   private _getListData(): Promise<ISPLists> {
     return this.context.spHttpClient.get(this.context.pageContext.web.absoluteUrl + `/_api/web/lists?$filter=Hidden eq false`, SPHttpClient.configurations.v1)
-      .then((response: Response) => {
+      .then((response: SPHttpClientResponse ) => {
         return response.json();
       });
   }
@@ -97,11 +90,11 @@ export default class HelloWorldWebPart extends BaseClientSideWebPart<IHelloWorld
     let html: string = '';
     items.forEach((item: ISPList) => {
       html += `
-        <ul class="${styles.list}">
-            <li class="${styles.listItem}">
-                <span class="ms-font-l">${item.Title}</span>
-            </li>
-        </ul>`;
+		<ul class="${styles.list}">
+			<li class="${styles.listItem}">
+				<span class="ms-font-l">${item.Title}</span>
+			</li>
+		</ul>`;
     });
 
     const listContainer: Element = this.domElement.querySelector('#spListContainer');
